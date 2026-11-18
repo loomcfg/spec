@@ -1,0 +1,5 @@
+query: """
+  SELECT id, status
+  FROM deployments
+  WHERE active = true
+  """

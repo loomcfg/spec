@@ -1,0 +1,13 @@
+{
+  "service": {
+    "name": "edge-gateway",
+    "port": 8443,
+    "enabled": true,
+    "fallback": null,
+    "timeout": "15s",
+    "tags": [
+      "prod",
+      "ca-central"
+    ]
+  }
+}

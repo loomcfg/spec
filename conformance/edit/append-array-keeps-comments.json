@@ -1,0 +1,12 @@
+{
+  "description": "Append item to multi-line array while keeping existing element comments",
+  "input": "formats: [\n  # Primary format\n  \"px4-ulog\"\n]\n",
+  "operation": {
+    "type": "append",
+    "path": [
+      "formats"
+    ],
+    "value": "ardupilot-bin"
+  },
+  "expected": "formats: [\n  # Primary format\n  \"px4-ulog\"\n  \"ardupilot-bin\"\n]\n"
+}

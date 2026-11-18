@@ -1,0 +1,107 @@
+(* ========================================================================== *)
+(* Loom Configuration Language - Formal EBNF Grammar (ISO/IEC 14977 style)    *)
+(* ========================================================================== *)
+
+Document       = { Trivia } , { Directive , { Trivia } } , [ ObjectEntries ] , { Trivia } , EOF ;
+
+(* --- Directives ----------------------------------------------------------- *)
+
+Directive      = SchemaDir | ImportDir ;
+SchemaDir      = "@schema" , WS , StringLit , Separator ;
+ImportDir      = "@import" , WS , StringLit , WS , "as" , WS , BareKey , Separator ;
+
+(* --- Objects & Entries ---------------------------------------------------- *)
+
+Object         = "{" , { Trivia } , [ ObjectEntries ] , { Trivia } , "}" ;
+
+ObjectEntries  = ObjectItem , { Separator , { Trivia } , ObjectItem } , [ Separator ] ;
+
+ObjectItem     = Member | Spread ;
+
+Member         = Key , { InlineTrivia } , ":" , { InlineTrivia } , Value ;
+
+Spread         = "..." , DotPath ;
+
+DotPath        = BareKey , { "." , BareKey } ;
+
+Key            = BareKey | EscapedString | LiteralString ;
+
+BareKey        = ( AsciiAlpha | "_" ) , { AsciiAlpha | AsciiDigit | "_" | "-" } ;
+                 (* Semantic constraint: BareKey != "true" | "false" | "null" *)
+
+(* --- Values --------------------------------------------------------------- *)
+
+Value          = Object
+               | Array
+               | TaggedValue
+               | StringLit
+               | NumberLit
+               | BooleanLit
+               | NullLit ;
+
+TaggedValue    = "@" , TagName , { InlineTrivia } , StringLit ;
+TagName        = AsciiLower , { AsciiLower | AsciiDigit | "_" | "-" } ;
+
+Array          = "[" , { Trivia } , [ ArrayElements ] , { Trivia } , "]" ;
+ArrayElements  = Value , { Separator , { Trivia } , Value } , [ Separator ] ;
+
+BooleanLit     = "true" | "false" ;
+NullLit        = "null" ;
+
+(* --- Strings -------------------------------------------------------------- *)
+
+StringLit      = MultilineEscaped
+               | MultilineLiteral
+               | EscapedString
+               | LiteralString ;
+
+EscapedString  = '"' , { EscapedChar } , '"' ;
+EscapedChar    = ? Any UTF-8 scalar except '"', '\', U+0000..U+001F, U+007F ?
+               | '\' , ( '"' | '\' | '/' | 'b' | 'f' | 'n' | 'r' | 't'
+                       | 'u' , HexDigit , HexDigit , HexDigit , HexDigit
+                       | 'u{' , HexDigit , { HexDigit } , '}' ) ;
+
+LiteralString  = "'" , { LiteralChar } , "'" ;
+LiteralChar    = ? Any UTF-8 scalar except "'", U+0000..U+001F, U+007F ? ;
+
+MultilineEscaped = '"""' , Newline , { MultilineEscapedContent } , { WS } , '"""' ;
+MultilineLiteral = "'''" , Newline , { MultilineLiteralContent } , { WS } , "'''" ;
+
+(* --- Numbers -------------------------------------------------------------- *)
+
+NumberLit      = HexInt | OctInt | BinInt | Float | DecInt ;
+
+HexInt         = "0x" , HexDigit , { [ "_" ] , HexDigit } ;
+OctInt         = "0o" , OctDigit , { [ "_" ] , OctDigit } ;
+BinInt         = "0b" , BinDigit , { [ "_" ] , BinDigit } ;
+
+DecInt         = [ "-" ] , UnsignedInt ;
+UnsignedInt    = "0" | ( NonZeroDigit , { [ "_" ] , AsciiDigit } ) ;
+
+Float          = DecInt , ( FracPart , [ ExpPart ] | ExpPart ) ;
+FracPart       = "." , AsciiDigit , { [ "_" ] , AsciiDigit } ;
+ExpPart        = ( "e" | "E" ) , [ "+" | "-" ] , AsciiDigit , { [ "_" ] , AsciiDigit } ;
+
+(* --- Separators, Whitespace & Comments ------------------------------------ *)
+
+Separator      = { InlineTrivia } , ( "," | Newline ) ;
+
+Trivia         = WS | Newline | LineComment | BlockComment ;
+InlineTrivia   = WS | BlockComment ;
+
+LineComment    = "#" , { ? Any UTF-8 scalar except U+000A, U+000D, U+0000..U+0008, U+000B..U+001F, U+007F ? } ;
+BlockComment   = "/*" , { ? Any UTF-8 scalar except "*/" and disallowed control chars ? } , "*/" ;
+
+Newline        = "\n" | "\r\n" ;
+WS             = " " | "\t" ;
+
+(* --- Character Classes ---------------------------------------------------- *)
+
+AsciiAlpha     = "A".."Z" | "a".."z" ;
+AsciiLower     = "a".."z" ;
+AsciiDigit     = "0".."9" ;
+NonZeroDigit   = "1".."9" ;
+HexDigit       = "0".."9" | "A".."F" | "a".."f" ;
+OctDigit       = "0".."7" ;
+BinDigit       = "0" | "1" ;
+EOF            = ? End of file ? ;

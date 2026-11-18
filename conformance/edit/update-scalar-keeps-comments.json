@@ -1,0 +1,12 @@
+{
+  "description": "Update scalar value while preserving leading and inline comments",
+  "input": "# Server port\nport: 8080 # default\n",
+  "operation": {
+    "type": "set",
+    "path": [
+      "port"
+    ],
+    "value": 9090
+  },
+  "expected": "# Server port\nport: 9090 # default\n"
+}

@@ -1,0 +1,9 @@
+# Basic service config
+service: {
+  name: "edge-gateway"
+  port: 8443
+  enabled: true
+  fallback: null
+  timeout: @dur "15s"
+  tags: ["prod", "ca-central"]
+}
